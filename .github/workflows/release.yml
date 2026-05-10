@@ -1,0 +1,42 @@
+name: 📦 MULTRIIX X — Automated Release Packager
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  draft-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 📦 Compile clean release package
+      run: |
+        mkdir -p dist/multriix-x
+        cp -r app.py main.py config.json LICENSE README.md multriix_x dist/multriix-x/
+        # Remove any potential local cache files inside package
+        find dist/multriix-x -name "__pycache__" -type d -exec rm -rf {} +
+        find dist/multriix-x -name "*.pyc" -delete
+        find dist/multriix-x -name ".multriix_port" -delete
+        find dist/multriix-x -name "README_PRIVATE.md" -delete
+        
+        # Zip the clean codebase
+        cd dist
+        zip -r multriix-x-release.zip multriix-x/
+        cd ..
+
+    - name: 🚀 Publish release draft with asset package
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/multriix-x-release.zip
+        draft: true
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
