@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MULTRIIX X | LIVE BRAIN</title>
+    <link rel="stylesheet" href="assets/tron.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        #brain-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hud-text {
+            color: var(--neon-cyan);
+            font-family: 'Courier New', Courier, monospace;
+            text-shadow: var(--cyan-glow);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .stats-box {
+            border: 1px solid var(--neon-cyan);
+            padding: 15px;
+            background: rgba(0, 20, 20, 0.7);
+            box-shadow: inset 0 0 10px var(--neon-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay">
+        <div class="stats-box">
+            <div class="hud-text">STATUS: <span id="brain-status">WAITING</span></div>
+            <div class="hud-text">TOKENS: <span id="brain-tokens">0</span></div>
+            <div class="hud-text">TPS: <span id="brain-tps">0.00</span></div>
+        </div>
+    </div>
+    <div id="brain-container">
+        <!-- Three.js canvas goes here -->
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="assets/brain.js"></script>
+</body>
+</html>

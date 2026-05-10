@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MULTRIIX X | CONFIGURATION</title>
+    <link rel="stylesheet" href="assets/tron.css">
+    <style>
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+        .config-section { border: 1px solid var(--neon-blue); padding: 15px; background: rgba(0,0,0,0.4); }
+        .config-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        label { color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <div class="dashboard" style="grid-template-columns: 1fr;">
+        <header>
+            <h1>CONFIGURATION CENTER</h1>
+            <button onclick="location.href='index.html'">BACK TO DASHBOARD</button>
+        </header>
+
+        <main class="main-content" style="overflow-y: auto;">
+            <div class="config-grid" id="config-container">
+                <!-- Sections will be loaded here -->
+            </div>
+            <div style="padding: 20px; text-align: center;">
+                <button id="save-all" style="font-size: 1.5em; padding: 10px 40px;">SAVE SYSTEM CONFIG 💾</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadConfig() {
+            const resp = await fetch('/api/config');
+            const config = await resp.json();
+            const container = document.getElementById('config-container');
+            
+            for (const [section, items] of Object.entries(config)) {
+                const secDiv = document.createElement('div');
+                secDiv.className = 'config-section';
+                secDiv.innerHTML = `<h3>${section}</h3>`;
+                
+                for (const [key, value] of Object.entries(items)) {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'config-item';
+                    itemDiv.innerHTML = `
+                        <label>${key}</label>
+                        <input type="text" value="${value}" data-section="${section}" data-key="${key}" class="config-input">
+                    `;
+                    secDiv.appendChild(itemDiv);
+                }
+                container.appendChild(secDiv);
+            }
+        }
+
+        document.getElementById('save-all').onclick = async () => {
+            const inputs = document.querySelectorAll('.config-input');
+            const newConfig = {};
+            inputs.forEach(input => {
+                const s = input.dataset.section;
+                const k = input.dataset.key;
+                if (!newConfig[s]) newConfig[s] = {};
+                newConfig[s][k] = input.value;
+            });
+
+            const resp = await fetch('/api/config/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newConfig)
+            });
+            if (resp.ok) alert('SYSTEM CONFIG UPDATED ✅');
+        };
+
+        loadConfig();
+    </script>
+</body>
+</html>

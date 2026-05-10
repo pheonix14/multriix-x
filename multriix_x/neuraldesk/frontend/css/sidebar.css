@@ -1,0 +1,143 @@
+/* NeuralDesk — Models panel + Modelfile Wizard styles */
+
+/* ── MODEL CARDS ───────────────────────────────────────── */
+.model-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration), border-color var(--duration);
+  animation: staggerFade 200ms var(--ease-out) both;
+}
+.model-card:hover { box-shadow: var(--shadow-md); }
+.model-card.active-model {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+/* ── MODELFILE WIZARD ──────────────────────────────────── */
+.wizard-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 150ms;
+}
+.wizard-box {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  width: 90%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 200ms var(--ease-out);
+}
+.wizard-header {
+  padding: var(--sp-6);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.wizard-title { font-size: var(--text-xl); font-weight: 600; flex: 1; }
+.wizard-close { cursor: pointer; color: var(--text-tertiary); font-size: 20px; padding: 4px 8px; border-radius: var(--radius-sm); }
+.wizard-close:hover { background: var(--bg-subtle); }
+
+/* Step indicator */
+.wizard-steps {
+  display: flex;
+  padding: var(--sp-4) var(--sp-6);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.wizard-step-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+}
+.wizard-step-dot::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 14px);
+  right: calc(-50% + 14px);
+  height: 2px;
+  background: var(--border);
+}
+.wizard-step-dot:last-child::after { display: none; }
+.step-circle {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  color: var(--text-tertiary);
+  z-index: 1;
+  transition: all var(--duration);
+}
+.wizard-step-dot.active .step-circle { background: var(--accent); color: white; border-color: var(--accent); }
+.wizard-step-dot.done .step-circle { background: var(--success); color: white; border-color: var(--success); }
+.step-label { font-size: 10px; color: var(--text-tertiary); margin-top: 4px; text-align: center; }
+.wizard-step-dot.active .step-label { color: var(--accent); font-weight: 600; }
+
+/* Wizard body */
+.wizard-body { padding: var(--sp-6); }
+.wizard-step-content { display: none; }
+.wizard-step-content.active { display: block; animation: fadeSlideIn 180ms var(--ease-out); }
+
+.wizard-footer {
+  padding: var(--sp-4) var(--sp-6);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Preset personality buttons */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+.preset-btn {
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--duration);
+}
+.preset-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+.preset-btn.selected { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Modelfile preview */
+.modelfile-preview {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border-radius: var(--radius-md);
+  padding: var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.mf-directive { color: #89b4fa; font-weight: 600; }
+.mf-value     { color: #a6e3a1; }
+.mf-param-key { color: #f9e2af; }
+.mf-comment   { color: #6c7086; }

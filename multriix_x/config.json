@@ -1,0 +1,65 @@
+{
+    "IDENTITY": {
+        "ai_name": "MULTRIIX",
+        "persona": "MULTRIIX X - Advanced AI Control Platform. Intelligent, efficient, and precise.",
+        "creator_tag": "ZeroX / PHEONIX14 "
+    },
+    "BRAIN": {
+        "model_primary": "qwen2.5:7b",
+        "model_fallback": "mistral:7b",
+        "model_mix_enabled": false,
+        "mix_ratio": {
+            "qwen": 0.7,
+            "mistral": 0.3
+        },
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "top_k": 40,
+        "max_tokens": 4096,
+        "context_window": 32768,
+        "repeat_penalty": 1.1
+    },
+    "MEMORY": {
+        "short_term_turns": 20,
+        "long_term_enabled": true,
+        "memory_db": "json",
+        "auto_summarize": true,
+        "inject_memories": true
+    },
+    "SYSTEM": {
+        "system_prompt": "You are MULTRIIX X, a powerful AI control platform built by ZeroX. You have full access to the user's PC and can assist with complex tasks, coding, and system management.",
+        "prefix_prompt": "",
+        "suffix_prompt": "",
+        "stop_sequences": []
+    },
+    "VOICE": {
+        "tts_enabled": false,
+        "tts_engine": "edge-tts",
+        "voice": "en-US-GuyNeural",
+        "stt_enabled": false
+    },
+    "PC_CONTROL": {
+        "shell_enabled": true,
+        "shell_whitelist": [],
+        "file_access": true,
+        "allowed_paths": [
+            "C:/",
+            "D:/"
+        ],
+        "process_control": true
+    },
+    "UI": {
+        "theme": "tron",
+        "brain_fps": 30,
+        "show_tokens_per_sec": true,
+        "chat_font_size": 14,
+        "dark_mode": true
+    },
+    "SERVER": {
+        "host": "127.0.0.1",
+        "port_start": 7860,
+        "port_max": 7900,
+        "reload_on_config_change": false,
+        "log_level": "INFO"
+    }
+}

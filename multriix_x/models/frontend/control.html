@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MULTRIIX X | PC CONTROL</title>
+    <link rel="stylesheet" href="assets/tron.css">
+    <style>
+        #terminal-output {
+            height: 400px;
+            background: #000;
+            color: var(--neon-green);
+            font-family: 'Share Tech Mono';
+            padding: 20px;
+            overflow-y: auto;
+            border: 1px solid var(--neon-cyan);
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+        .cmd-line { color: var(--neon-cyan); }
+    </style>
+</head>
+<body>
+    <div class="dashboard" style="grid-template-columns: 1fr;">
+        <header>
+            <h1>PC CONTROL TERMINAL</h1>
+            <button onclick="location.href='index.html'">BACK TO DASHBOARD</button>
+        </header>
+
+        <main class="main-content" style="padding: 20px;">
+            <div id="terminal-output">> MULTRIIX CONTROL v1.0.0 READY...</div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="cmd-input" placeholder="ENTER SYSTEM COMMAND..." style="flex: 1; font-size: 1.2em;">
+                <button id="run-btn">EXECUTE</button>
+            </div>
+            
+            <div style="margin-top: 30px;" class="panel">
+                <h3>ACTIVE PROCESSES</h3>
+                <div id="process-list" class="mono">Loading processes...</div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const output = document.getElementById('terminal-output');
+        const input = document.getElementById('cmd-input');
+        const runBtn = document.getElementById('run-btn');
+
+        async function runCmd() {
+            const cmd = input.value;
+            if (!cmd) return;
+            
+            output.innerHTML += `\n<span class="cmd-line">>> ${cmd}</span>\n`;
+            input.value = '';
+            
+            const resp = await fetch('/api/control/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: cmd })
+            });
+            const result = await resp.json();
+            
+            if (result.stdout) output.innerHTML += result.stdout;
+            if (result.stderr) output.innerHTML += `<span style="color: var(--neon-red)">${result.stderr}</span>`;
+            if (result.error) output.innerHTML += `<span style="color: var(--neon-red)">ERROR: ${result.error}</span>`;
+            
+            output.scrollTop = output.scrollHeight;
+        }
+
+        runBtn.onclick = runCmd;
+        input.onkeypress = (e) => { if (e.key === 'Enter') runCmd(); };
+    </script>
+</body>
+</html>

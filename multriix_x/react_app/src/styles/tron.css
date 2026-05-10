@@ -1,0 +1,49 @@
+:root {
+    --neon-cyan: #00ffff;
+    --neon-pink: #ff00ff;
+    --dark-bg: #000505;
+    --cyan-glow: 0 0 10px rgba(0, 255, 255, 0.7);
+    --grid-color: rgba(0, 255, 255, 0.1);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--dark-bg);
+    color: var(--neon-cyan);
+    font-family: 'Courier New', Courier, monospace;
+    background-image: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 30px 30px;
+    overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #001111;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--neon-cyan);
+}
+
+.tron-panel {
+    border: 1px solid var(--neon-cyan);
+    box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.2);
+    background: rgba(0, 10, 10, 0.85);
+    backdrop-filter: blur(5px);
+}
+
+button {
+    text-transform: uppercase;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: var(--neon-cyan) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px var(--neon-cyan) !important;
+}

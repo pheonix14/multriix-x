@@ -1,0 +1,169 @@
+/* NeuralDesk — Config Editor Styles */
+
+#view-settings {
+  overflow-y: auto;
+  padding: var(--sp-6) var(--sp-8);
+  gap: var(--sp-5);
+  flex-direction: column;
+}
+
+.settings-header {
+  margin-bottom: var(--sp-2);
+}
+.settings-header h2 {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+}
+.settings-header p { color: var(--text-secondary); font-size: var(--text-sm); margin-top: 4px; }
+
+/* Collapsible section */
+.settings-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  font-size: var(--text-base);
+  border-bottom: 1px solid var(--border);
+  transition: background var(--duration);
+}
+.settings-section-header:hover { background: var(--bg-subtle); }
+.settings-section-header .section-icon { font-size: 18px; }
+.settings-section-header .section-chevron {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  transition: transform var(--duration);
+}
+.settings-section.collapsed .section-chevron { transform: rotate(-90deg); }
+.settings-section.collapsed .settings-section-body { display: none; }
+.settings-section-body { padding: 0 var(--sp-5); }
+
+/* Individual setting row */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--divider);
+  gap: var(--sp-6);
+}
+.setting-row:last-child { border-bottom: none; }
+
+.setting-info { flex: 1; min-width: 0; }
+.setting-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 3px;
+}
+.setting-desc {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.setting-control {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+  min-width: 220px;
+}
+
+/* Slider */
+.slider-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.slider-label { font-size: var(--text-xs); color: var(--text-tertiary); white-space: nowrap; }
+.setting-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.setting-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 150ms;
+}
+.setting-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.slider-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--accent);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* Textarea setting */
+.setting-textarea {
+  width: 100%;
+  padding: var(--sp-3);
+  height: 100px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  color: var(--text-primary);
+  transition: border-color var(--duration);
+}
+.setting-textarea:focus { border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+
+/* Autosave indicator */
+.autosave-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) 0 var(--sp-2);
+}
+.autosave-status {
+  font-size: var(--text-xs);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.autosave-status.saving { color: var(--text-secondary); }
+
+/* Connection test */
+.connection-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) 0;
+}
+.connection-row .input { flex: 1; }
+.connection-result {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+.connection-result.ok { color: var(--success); }
+.connection-result.fail { color: var(--danger); }

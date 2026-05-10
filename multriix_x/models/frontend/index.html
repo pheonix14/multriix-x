@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Control Center</title>
+    <!-- Use Inter font for clean Apple/Google style -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand">
+            ✨ AI Control
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Menu</div>
+            <div class="nav-item active" data-target="view-chat">
+                💬 Chat Interface
+            </div>
+            <div class="nav-item" data-target="view-settings">
+                ⚙️ Simple Settings
+            </div>
+            <div class="nav-item" data-target="view-editor">
+                📄 File Editor
+            </div>
+        </div>
+
+        <!-- MODEL SELECTOR -->
+        <div class="model-selector">
+            <div style="font-size: 0.85rem; font-weight: 500;">Active Model</div>
+            <select id="model-dropdown">
+                <option value="auto">Detecting models...</option>
+            </select>
+            <div class="model-status">
+                <div class="status-indicator" id="status-dot"></div>
+                <span id="status-text">Checking local AI...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        
+        <!-- CHAT VIEW -->
+        <div id="view-chat" class="view active">
+            <h1>Chat</h1>
+            <div class="subtitle">Talk securely with your local AI models. Everything stays on this PC.</div>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai">Hello! I am your local AI. How can I help you today?</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Ask anything... (Press Enter to send)">
+                    <button id="send-btn">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW (Visual Editor) -->
+        <div id="view-settings" class="view">
+            <h1>Settings</h1>
+            <div class="subtitle">Customize how the AI behaves. Changes save automatically.</div>
+
+            <div class="config-card">
+                <h3>Brain Settings 🧠</h3>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Creativity Level <span class="help-icon" title="Higher means more random/creative answers. Lower means more factual/strict.">?</span></div>
+                        <div class="setting-desc">How wild or strictly factual the AI should be (Temperature).</div>
+                    </div>
+                    <div class="setting-control">
+                        <span style="font-size:0.8rem;color:#86868b">Strict</span>
+                        <input type="range" id="cfg-temperature" min="0" max="2" step="0.1" value="0.7">
+                        <span style="font-size:0.8rem;color:#86868b" id="cfg-temperature-val">0.7</span>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Answer Length Limit <span class="help-icon" title="The maximum number of words the AI is allowed to output.">?</span></div>
+                        <div class="setting-desc">Stop the AI from talking too much (Max Tokens).</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" id="cfg-max-tokens" value="4096">
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">AI Personality / Rules <span class="help-icon" title="Tell the AI how to act. e.g. 'You are a helpful pirate.'">?</span></div>
+                        <div class="setting-desc">The secret instructions the AI follows (System Prompt).</div>
+                    </div>
+                    <div class="setting-control" style="width: 100%;">
+                        <input type="text" id="cfg-system-prompt" style="width:100%" value="You are a helpful local AI assistant.">
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <h3>Memory & System 💾</h3>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Remember Past Conversations <span class="help-icon" title="If turned on, the AI saves what you talk about to long-term memory.">?</span></div>
+                        <div class="setting-desc">Allow the AI to learn facts about you over time.</div>
+                    </div>
+                    <div class="setting-control" style="justify-content: flex-end;">
+                        <label class="switch">
+                            <input type="checkbox" id="cfg-long-term" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap: 12px; margin-top: 16px;">
+                <button class="btn-primary" id="save-settings-btn">Save Changes</button>
+                <button class="btn-secondary" id="reset-settings-btn">Reset to Default</button>
+            </div>
+        </div>
+
+        <!-- FILE EDITOR VIEW -->
+        <div id="view-editor" class="view">
+            <h1>File Editor</h1>
+            <div class="subtitle">Directly edit raw config files and Ollama Modelfiles. Advanced users only.</div>
+
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <select class="file-picker" id="editor-file-select">
+                        <option value="config.json">⚙️ config.json (Main Settings)</option>
+                        <option value="modelfile">📦 Modelfile (Ollama Model Recipe)</option>
+                    </select>
+                    <div style="display:flex; gap: 8px;">
+                        <button class="btn-secondary" id="editor-explain-btn">Explain this file</button>
+                        <button class="btn-primary" id="editor-save-btn">Save File</button>
+                    </div>
+                </div>
+                <!-- Simple textarea instead of complex Monaco for "no-code/simple" requirement, but styled neatly -->
+                <textarea class="editor-textarea" id="editor-textarea" spellcheck="false" placeholder="Loading file contents..."></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="assets/app.js"></script>
+</body>
+</html>

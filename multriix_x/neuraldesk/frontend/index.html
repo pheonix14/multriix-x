@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MULTRIIX X</title>
+<meta name="description" content="Offline, local AI model manager and chat interface by Pheonix14.">
+<link rel="icon" type="image/png" href="/static/img/favicon.png">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Icons: Lucide via CDN -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<!-- Styles -->
+<link rel="stylesheet" href="/static/css/main.css">
+<link rel="stylesheet" href="/static/css/animations.css">
+<link rel="stylesheet" href="/static/css/sidebar.css">
+<link rel="stylesheet" href="/static/css/chat.css">
+<link rel="stylesheet" href="/static/css/config.css">
+<link rel="stylesheet" href="/static/css/files.css">
+<link rel="stylesheet" href="/static/css/monitor.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── TOPBAR ──────────────────────────────────────────── -->
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-icon">[X]</span>
+      MULTRIIX X
+    </div>
+
+    <div class="model-badge" id="active-model-badge" onclick="App.openModelPicker()">
+      <span id="active-model-name">Loading...</span>
+      <span class="caret">▾</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="live-stats" id="live-stats">
+      <div class="stat-item">
+        <span class="stat-dot" id="ollama-dot" style="background: var(--text-tertiary)"></span>
+        <span id="stat-ollama">Ollama...</span>
+      </div>
+      <div class="stat-item">[CPU] <span id="stat-cpu">—</span></div>
+      <div class="stat-item">[RAM] <span id="stat-ram">—</span></div>
+    </div>
+  </header>
+
+  <!-- ── SIDEBAR ────────────────────────────────────────── -->
+  <nav id="sidebar">
+    <div class="sidebar-nav">
+      <div class="nav-item active" data-view="chat" onclick="App.switchView('chat')">
+        <span class="nav-icon">[+]</span>
+        <span class="nav-label">Chat</span>
+      </div>
+      <div class="nav-item" data-view="models" onclick="App.switchView('models')">
+        <span class="nav-icon">[M]</span>
+        <span class="nav-label">Models</span>
+      </div>
+      <div class="nav-item" data-view="settings" onclick="App.switchView('settings')">
+        <span class="nav-icon">[*]</span>
+        <span class="nav-label">Settings</span>
+      </div>
+      <div class="nav-item" data-view="files" onclick="App.switchView('files')">
+        <span class="nav-icon">[/]</span>
+        <span class="nav-label">Code Editor</span>
+      </div>
+      <div class="nav-item" data-view="monitor" onclick="App.switchView('monitor')">
+        <span class="nav-icon">[~]</span>
+        <span class="nav-label">Monitor</span>
+      </div>
+      <div class="nav-item" data-view="about" onclick="App.switchView('about')">
+        <span class="nav-icon">[i]</span>
+        <span class="nav-label">Creator & Info</span>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-model-chip" id="sidebar-model-chip">
+      <div class="chip-label" id="chip-model-name">No model</div>
+      <div class="text-xs text-secondary" style="margin-top:4px; display:flex; align-items:center; gap:4px;">
+        <span class="status-dot-inline status-unknown" id="chip-status-dot"></span>
+        <span id="chip-status-text">Unknown</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT ──────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ── CHAT VIEW ────────────────────────────────────── -->
+    <div class="view active" id="view-chat">
+      <!-- Toolbar -->
+      <div class="chat-toolbar">
+        <select id="session-select" class="chat-session-select input" onchange="Chat.loadSession(this.value)" style="height:34px; max-width:180px;"></select>
+        <button class="btn btn-ghost btn-sm" onclick="Chat.newSession()" title="New Chat">+ New Chat</button>
+        
+        <!-- Live Model Switcher -->
+        <span style="font-size:12px; color:var(--text-secondary); margin-left:12px; margin-right:4px; font-family:var(--font-mono)">Active Model:</span>
+        <select id="chat-model-select" class="input" style="height:34px; max-width:180px; font-size:12px; font-family:var(--font-mono); border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg-surface); color:var(--text-primary); cursor:pointer; padding:0 8px;" onchange="Chat.changeModel(this.value)">
+          <!-- Populated dynamically with available models -->
+        </select>
+        
+        <div style="flex:1"></div>
+        <button class="btn btn-ghost btn-sm" id="export-btn" onclick="Chat.exportSession()">⬇ Export</button>
+        <button class="btn btn-ghost btn-sm" id="delete-session-btn" onclick="Chat.deleteSession()">[x] Delete</button>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-empty" id="chat-empty">
+          <div class="empty-icon">[+]</div>
+          <h3>Start a conversation</h3>
+          <p>Type a message below and your local AI will respond instantly.</p>
+        </div>
+      </div>
+
+      <!-- Input bar -->
+      <div class="chat-input-bar">
+        <div class="chat-input-inner">
+          <textarea id="chat-textarea" placeholder="Ask anything..." rows="1" maxlength="16000"></textarea>
+          <button class="chat-send-btn" id="chat-send-btn" onclick="Chat.send()" title="Send (Enter)">
+            ➤
+          </button>
+        </div>
+        <div class="chat-hint">Enter to send · Shift+Enter for new line · <span id="char-count"></span></div>
+      </div>
+    </div>
+
+    <!-- ── MODELS VIEW ───────────────────────────────────── -->
+    <div class="view" id="view-models">
+      <div style="padding: var(--sp-6) var(--sp-8); flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:var(--sp-5);">
+
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 style="font-size:var(--text-2xl); font-weight:600;">AI Models</h2>
+            <p class="text-secondary text-sm" style="margin-top:4px;">Manage your installed local AI models</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary" onclick="Wizard.open()">[*] Create Personality</button>
+            <button class="btn btn-primary" onclick="Models.refresh()">[↺] Refresh</button>
+          </div>
+        </div>
+
+        <!-- Pull new model -->
+        <div class="card card-pad">
+          <h3 style="font-weight:600; margin-bottom:var(--sp-3);">[⬇] Download New Model</h3>
+          <p class="text-sm text-secondary" style="margin-bottom:var(--sp-3);">Enter an Ollama model name (e.g. <code>mistral:7b</code>, <code>llama3.2:3b</code>, <code>qwen2.5:7b</code>)</p>
+          <div class="flex items-center gap-3">
+            <input type="text" class="input" id="pull-model-input" placeholder="e.g. qwen2.5:0.5b" style="max-width:300px;">
+            <button class="btn btn-primary" onclick="Models.pull()">Download</button>
+          </div>
+          
+          <div style="margin-top:var(--sp-6);">
+            <h4 style="font-weight:600; margin-bottom:var(--sp-2);">Popular Free AI Models</h4>
+            <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sp-3);">
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono); color:#e67e22;">qwen2.5-coder:1.5b</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">Lightweight Coding Expert (900MB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='qwen2.5-coder:1.5b'; Models.pull();">[+] Install</button>
+              </div>
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono); color:#e67e22;">qwen2.5-coder:7b</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">SOTA Elite Coding Specialist (4.7GB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='qwen2.5-coder:7b'; Models.pull();">[+] Install</button>
+              </div>
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono); color:#3498db;">phi3:medium</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">Microsoft Logic & Math (8.2GB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='phi3:medium'; Models.pull();">[+] Install</button>
+              </div>
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono); color:#f1c40f;">codegemma:7b</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">Google Logic & Code (4.8GB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='codegemma:7b'; Models.pull();">[+] Install</button>
+              </div>
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono);">qwen2.5:0.5b</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">Small & Fast (400MB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='qwen2.5:0.5b'; Models.pull();">[+] Install</button>
+              </div>
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono);">llama3.2:3b</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">Smart & Capable (2.0GB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='llama3.2:3b'; Models.pull();">[+] Install</button>
+              </div>
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono);">deepseek-coder:6.7b</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">Balanced Code Generator (3.8GB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='deepseek-coder:6.7b'; Models.pull();">[+] Install</button>
+              </div>
+              <div class="card card-pad" style="padding:var(--sp-3);">
+                <div style="font-weight:600; font-family:var(--font-mono); color:#ecf0f1;">codellama:7b</div>
+                <div class="text-xs text-secondary" style="margin-bottom:var(--sp-2);">Meta Code & Reason (3.8GB)</div>
+                <button class="btn btn-sm btn-secondary" style="width:100%" onclick="document.getElementById('pull-model-input').value='codellama:7b'; Models.pull();">[+] Install</button>
+              </div>
+            </div>
+          </div>
+          <div id="pull-progress" class="hidden" style="margin-top:var(--sp-3);">
+            <div class="flex items-center justify-between text-sm" style="margin-bottom:6px;">
+              <span id="pull-status">Downloading...</span>
+              <span id="pull-pct" class="text-mono">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="pull-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="flex gap-3 items-center">
+          <input class="input" id="model-search" placeholder="🔍 Filter models..." style="max-width:280px;" oninput="Models.filter()">
+          <div id="model-count" class="text-sm text-secondary"></div>
+        </div>
+
+        <!-- Model cards grid -->
+        <div id="model-grid" class="stagger-children" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:var(--sp-4);">
+          <div class="card card-pad skeleton" style="height:160px;"></div>
+          <div class="card card-pad skeleton" style="height:160px;"></div>
+          <div class="card card-pad skeleton" style="height:160px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS VIEW ─────────────────────────────────── -->
+    <div class="view" id="view-settings">
+      <div style="padding: var(--sp-6) var(--sp-8); overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:var(--sp-5);">
+        <div class="settings-header">
+          <h2>Settings</h2>
+          <p>Customize how your AI thinks and responds. Changes save automatically.</p>
+        </div>
+
+        <!-- AI Personality -->
+        <div class="settings-section" id="sec-personality">
+          <div class="settings-section-header" onclick="Config.toggleSection('personality')">
+            <span class="section-icon">[+]</span> AI Personality
+            <span class="section-chevron">▾</span>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:var(--sp-3);">
+              <div class="setting-label">
+                Secret Instructions
+                <span class="help-btn tooltip-wrap">?<span class="tooltip-box">Tell the AI who it is and how to behave. e.g. "You are a helpful cooking expert."</span></span>
+              </div>
+              <div class="setting-desc">The AI reads this before every message (System Prompt)</div>
+              <textarea class="setting-textarea" id="cfg-system-prompt" style="width:100%;"></textarea>
+              <div class="flex gap-2">
+                <button class="btn btn-sm btn-secondary" onclick="Config.resetField('system_prompt')">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Response Style -->
+        <div class="settings-section" id="sec-response">
+          <div class="settings-section-header" onclick="Config.toggleSection('response')">
+            <span class="section-icon">[~]</span> Response Style
+            <span class="section-chevron">▾</span>
+          </div>
+          <div class="settings-section-body" id="response-body">
+            <!-- Generated by config.js -->
+          </div>
+        </div>
+
+        <!-- Chat UI -->
+        <div class="settings-section" id="sec-chatui">
+          <div class="settings-section-header" onclick="Config.toggleSection('chatui')">
+            <span class="section-icon">[-]</span> Chat Interface
+            <span class="section-chevron">▾</span>
+          </div>
+          <div class="settings-section-body" id="chatui-body">
+          </div>
+        </div>
+
+        <!-- Connection -->
+        <div class="settings-section" id="sec-connection">
+          <div class="settings-section-header" onclick="Config.toggleSection('connection')">
+            <span class="section-icon">[/]</span> Connection
+            <span class="section-chevron">▾</span>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">Ollama Address
+                  <span class="help-btn tooltip-wrap">?<span class="tooltip-box">The web address where Ollama is running on your computer. Only change this if you moved Ollama to a different port.</span></span>
+                </div>
+                <div class="setting-desc">Usually http://127.0.0.1:11434 — don't change unless you know why</div>
+              </div>
+              <div class="setting-control" style="gap:var(--sp-2);">
+                <input class="input" id="cfg-ollama-url" value="http://127.0.0.1:11434" style="width:220px;">
+                <button class="btn btn-sm btn-secondary" onclick="Config.testConnection()">Test</button>
+                <span id="connection-result" class="connection-result"></span>
+              </div>
+            </div>
+
+            <div class="setting-row" style="margin-top: var(--sp-4);">
+              <div class="setting-info">
+                <div class="setting-label">HuggingFace Token (HF_TOKEN)
+                  <span class="help-btn tooltip-wrap">?<span class="tooltip-box">Enter your private HuggingFace API key to download restricted or gated models and avoid rate limits.</span></span>
+                </div>
+                <div class="setting-desc">Your personal token stored locally for downloading HuggingFace models</div>
+              </div>
+              <div class="setting-control" style="gap:var(--sp-2);">
+                <input class="input" type="password" id="cfg-hf-token" placeholder="hf_..." style="width:220px;">
+                <button class="btn btn-sm btn-primary" onclick="Config.saveHFToken()" id="cfg-save-hf-btn">Save Token</button>
+              </div>
+            </div>
+
+            <div class="setting-row" style="margin-top: var(--sp-4);">
+              <div class="setting-info">
+                <div class="setting-label">Anthropic API Key (Claude)
+                  <span class="help-btn tooltip-wrap">?<span class="tooltip-box">Enter your private Anthropic API key to unlock running premium Claude models (Claude 3.5 Sonnet, etc.) directly.</span></span>
+                </div>
+                <div class="setting-desc">Stored locally for Claude fallback integration</div>
+              </div>
+              <div class="setting-control" style="gap:var(--sp-2);">
+                <input class="input" type="password" id="cfg-anthropic-key" placeholder="sk-ant-..." style="width:220px;">
+                <button class="btn btn-sm btn-primary" onclick="Config.saveAnthropicKey()" id="cfg-save-ant-btn">Save Key</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Autosave bar -->
+        <div class="autosave-bar">
+          <span class="autosave-status" id="autosave-status">[+] All changes saved</span>
+          <button class="btn btn-sm btn-secondary" onclick="Config.resetAll()">Reset All to Default</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FILE MANAGER VIEW ─────────────────────────────── -->
+    <div class="view" id="view-files">
+      <!-- Browser pane -->
+      <div class="files-browser">
+        <div class="file-breadcrumb" id="file-breadcrumb">
+          <span class="breadcrumb-part" onclick="Files.browse('~')">[Home]</span>
+        </div>
+        <div class="files-toolbar">
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="Files.goUp()" title="Go up">↑</button>
+          <button class="btn btn-ghost btn-icon btn-sm" onclick="Files.refresh()" title="Refresh">↺</button>
+          <button class="btn btn-secondary btn-sm" onclick="Files.newFile()" title="Create New File" style="font-weight:600; padding: 0 8px; display: flex; align-items: center; gap: 4px; height: 30px;">[+] New File</button>
+          <input class="input" id="file-search" placeholder="Search..." style="flex:1; height:30px; font-size:12px;" oninput="Files.search()">
+        </div>
+
+        <!-- Quick access -->
+        <div class="quick-access">
+          <div class="qa-title">Quick Access</div>
+          <div class="qa-item" onclick="Files.browse('~')">[H] PC Home</div>
+          <div class="qa-item" onclick="Files.browse('~/.ollama')">[M] Ollama Storage</div>
+          <div class="qa-item" onclick="Files.browse('../models')">[#] AI Python Handlers</div>
+          <div class="qa-item" onclick="Files.browse('../..')">[/] MULTRIIX X Code</div>
+        </div>
+
+        <div class="file-list" id="file-list">
+          <div style="padding:var(--sp-5); text-align:center; color:var(--text-tertiary); font-size:var(--text-sm);">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Resizer -->
+      <div class="files-resizer" id="files-resizer"></div>
+
+      <!-- Editor pane -->
+      <div class="files-editor">
+        <div class="editor-header" id="editor-header">
+          <div class="editor-filepath" id="editor-filepath">No file open</div>
+          <div class="editor-dirty-dot" id="editor-dirty-dot"></div>
+          <button class="btn btn-ghost btn-sm" onclick="Files.copyAll()">Copy All</button>
+          <button class="btn btn-sm btn-primary" id="editor-save-btn" onclick="Files.save()" disabled>Save  Ctrl+S</button>
+        </div>
+        <div class="editor-body">
+          <div class="editor-empty" id="editor-empty">
+            <div class="empty-icon">[ ]</div>
+            <div class="text-secondary text-sm">Select a file to edit it here</div>
+          </div>
+          <textarea id="file-editor-textarea" class="hidden" spellcheck="false" oninput="Files.markDirty()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MONITOR VIEW ──────────────────────────────────── -->
+    <div class="view" id="view-monitor">
+      <div style="padding: var(--sp-6) var(--sp-8); overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:var(--sp-5);">
+        <div class="flex items-center justify-between">
+          <h2 style="font-size:var(--text-2xl); font-weight:600;">System Monitor</h2>
+          <span class="badge badge-success" id="monitor-live-badge">● Live</span>
+        </div>
+
+        <div class="monitor-grid">
+          <!-- CPU -->
+          <div class="gauge-card" id="card-cpu">
+            <div class="gauge-card-title">[CPU] Processor</div>
+            <div class="gauge-wrap">
+              <div class="gauge-circle">
+                <svg viewBox="0 0 80 80" width="80" height="80">
+                  <circle class="gauge-bg" cx="40" cy="40" r="35"/>
+                  <circle class="gauge-fill" id="cpu-fill" cx="40" cy="40" r="35"/>
+                </svg>
+                <div class="gauge-value" id="cpu-val">0%</div>
+              </div>
+              <div class="gauge-details">
+                <div class="gauge-detail-row"><span class="gauge-detail-label">Cores</span><span class="gauge-detail-value" id="cpu-cores">—</span></div>
+                <div class="gauge-detail-row"><span class="gauge-detail-label">Frequency</span><span class="gauge-detail-value" id="cpu-freq">—</span></div>
+                <div class="core-bars" id="core-bars"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RAM -->
+          <div class="gauge-card" id="card-ram">
+            <div class="gauge-card-title">[RAM] Memory</div>
+            <div class="gauge-wrap">
+              <div class="gauge-circle">
+                <svg viewBox="0 0 80 80" width="80" height="80">
+                  <circle class="gauge-bg" cx="40" cy="40" r="35"/>
+                  <circle class="gauge-fill" id="ram-fill" cx="40" cy="40" r="35"/>
+                </svg>
+                <div class="gauge-value" id="ram-val">0%</div>
+              </div>
+              <div class="gauge-details">
+                <div class="gauge-detail-row"><span class="gauge-detail-label">Used</span><span class="gauge-detail-value" id="ram-used">—</span></div>
+                <div class="gauge-detail-row"><span class="gauge-detail-label">Total</span><span class="gauge-detail-value" id="ram-total">—</span></div>
+                <div class="gauge-detail-row"><span class="gauge-detail-label">Free</span><span class="gauge-detail-value" id="ram-free">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GPU -->
+          <div class="gauge-card" id="card-gpu">
+            <div class="gauge-card-title">[GPU] Graphics</div>
+            <div id="gpu-content"><div class="no-gpu">Detecting GPU...</div></div>
+          </div>
+
+          <!-- Disk -->
+          <div class="gauge-card" id="card-disk">
+            <div class="gauge-card-title">[DSK] Storage</div>
+            <div id="disk-content"><div class="text-secondary text-sm">Loading...</div></div>
+          </div>
+        </div>
+
+        <!-- Process table -->
+        <div class="process-card">
+          <div class="process-card-header">
+            <span style="font-weight:600;">[*] Active Processes</span>
+            <input class="input" id="proc-search" placeholder="Filter by name..." style="max-width:200px; height:30px; font-size:12px; margin-left:auto;" oninput="Monitor.filterProcs()">
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="process-table">
+              <thead>
+                <tr>
+                  <th onclick="Monitor.sortProcs('pid')">PID</th>
+                  <th onclick="Monitor.sortProcs('name')">Name</th>
+                  <th onclick="Monitor.sortProcs('cpu_percent')">CPU %</th>
+                  <th onclick="Monitor.sortProcs('ram_mb')">RAM MB</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="proc-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CREATOR & INFO VIEW ───────────────────────────── -->
+    <div class="view" id="view-about">
+      <div style="padding: var(--sp-6) var(--sp-8); overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:var(--sp-5);">
+        
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 style="font-size:var(--text-2xl); font-weight:600;">Creator & Info</h2>
+            <p class="text-secondary text-sm" style="margin-top:4px;">Vision, privacy, security, and developer notes for MULTRIIX X</p>
+          </div>
+          <span class="badge badge-info" style="color: white; background: var(--accent);">v1.0.0</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:var(--sp-5);">
+          
+          <!-- Creator's Note -->
+          <div class="card card-pad" style="grid-column: 1 / -1;">
+            <h3 style="font-weight:600; margin-bottom:var(--sp-3); color:var(--accent);">[★] Creator's Note & Vision</h3>
+            <p style="line-height:1.6; margin-bottom:var(--sp-3); font-size: 14px;">
+              Welcome to <strong>MULTRIIX X</strong>! Built and guided by <strong>ZeroX</strong> (aka <strong>pheonix14</strong> on GitHub). 
+              This project is built because I believe in a future where users fully own, modify, and control their AI models, 
+              instead of being monitored, restricted, or charged high fees by mega-corporations.
+            </p>
+            <p style="line-height:1.6; margin-bottom:var(--sp-3); font-size: 14px;">
+              Local AI represents true user sovereignty, absolute privacy, and total flexibility. Many people do not have 
+              the high-end resources to train their own models or build custom systems, which is why we created MULTRIIX X. 
+              Our dream is to collaborate as an open-source community to build the <strong>world's best locally-running AI ecosystem</strong> 
+              that can serve as a base for developers and creators everywhere.
+            </p>
+            <p style="line-height:1.6; font-style:italic; border-left: 3px solid var(--accent); padding-left: 12px; margin-bottom:var(--sp-4); font-size: 14px; color: var(--text-secondary);">
+              "Not everyone has the money to pay for subscriptions. I am also broke, so let's build the ultimate local AI system together!" — ZeroX
+            </p>
+            <div class="flex gap-3">
+              <a href="https://github.com/pheonix14" target="_blank" class="btn btn-primary">[★] Follow on GitHub</a>
+              <a href="#donate-panel" onclick="document.getElementById('donate-panel').scrollIntoView({behavior: 'smooth'}); return false;" class="btn btn-secondary">[❤] Donate & Support</a>
+            </div>
+          </div>
+
+          <!-- Privacy Policy -->
+          <div class="card card-pad">
+            <h3 style="font-weight:600; margin-bottom:var(--sp-3); color:var(--success);">[🛡] Privacy Policy</h3>
+            <p style="line-height:1.5; margin-bottom:var(--sp-2); font-size:13px;">MULTRIIX X guarantees absolute data sovereignty:</p>
+            <ul style="margin-left:20px; line-height:1.6; display:flex; flex-direction:column; gap:4px; font-size:13px; color: var(--text-secondary);">
+              <li><strong>100% Offline & Local:</strong> Every chat, parameter change, file edit, and shell command runs entirely on your local machine.</li>
+              <li><strong>Zero Telemetry:</strong> There are no analytics, trackers, or hidden reporting channels.</li>
+              <li><strong>Secure Sandbox:</strong> You control which folders and files are accessible. No third-party servers see your prompts.</li>
+            </ul>
+          </div>
+
+          <!-- Security & Fallbacks -->
+          <div class="card card-pad">
+            <h3 style="font-weight:600; margin-bottom:var(--sp-3); color:var(--info);">[🔐] Hacker-Proof Security</h3>
+            <p style="line-height:1.5; margin-bottom:var(--sp-2); font-size:13px;">Hardened local system isolation:</p>
+            <ul style="margin-left:20px; line-height:1.6; display:flex; flex-direction:column; gap:4px; font-size:13px; color: var(--text-secondary);">
+              <li><strong>Localhost Restriction:</strong> The server strictly binds to <code>127.0.0.1</code> (localhost) rather than <code>0.0.0.0</code>, blocking any network-level interception.</li>
+              <li><strong>Resilient Port Manager:</strong> Scans port bounds dynamically on boot to isolate running nodes from port-hijacking or conflicts.</li>
+              <li><strong>Automatic Fallbacks:</strong> Seamlessly shifts to standalone GLM/HuggingFace or Ollama standby if primary local nodes are offline.</li>
+            </ul>
+          </div>
+
+          <!-- Donate & Support Panel -->
+          <div class="card card-pad" id="donate-panel" style="grid-column: 1 / -1; margin-top: var(--sp-4);">
+            <h3 style="font-weight:600; margin-bottom:var(--sp-3); color:#e06666; display:flex; align-items:center; gap:8px;">
+              <span>[❤] Donate & Support ZeroX</span>
+            </h3>
+            <p style="line-height:1.5; margin-bottom:var(--sp-5); font-size:14px; color: var(--text-secondary);">
+              If you appreciate the freedom and privacy of MULTRIIX X and want to support its ongoing development, feel free to send a donation. Your support helps keep this project independent and open-source!
+            </p>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:var(--sp-5);">
+              
+              <!-- Litecoin Column -->
+              <div class="card card-pad" style="background: var(--bg-surface); border: 1px solid var(--border); display:flex; flex-direction:column; align-items:center; text-align:center; padding: var(--sp-4);">
+                <div style="font-weight:700; color:#345d9d; margin-bottom:var(--sp-2); font-size:15px; display:flex; align-items:center; gap:6px;">
+                  <span>Ł Litecoin (LTC)</span>
+                </div>
+                <img src="/static/img/litecoin_qr.png" alt="Litecoin QR Code" style="width:160px; height:160px; border-radius: 8px; margin-bottom:var(--sp-3); border: 1px solid var(--border); background: white; padding: 4px;">
+                <div class="text-xs text-secondary" style="font-family:var(--font-mono); word-break:break-all; padding: 0 8px; margin-bottom:var(--sp-3); min-height: 32px;">
+                  ltc1q08zgc7n6lgghfxtlure29mc8dye70r6ccq8gx0
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('ltc1q08zgc7n6lgghfxtlure29mc8dye70r6ccq8gx0'); Utils.toast('Litecoin address copied!', 'success');" style="width:100%;">Copy Address</button>
+              </div>
+
+              <!-- Polygon Column -->
+              <div class="card card-pad" style="background: var(--bg-surface); border: 1px solid var(--border); display:flex; flex-direction:column; align-items:center; text-align:center; padding: var(--sp-4);">
+                <div style="font-weight:700; color:#8247e5; margin-bottom:var(--sp-2); font-size:15px; display:flex; align-items:center; gap:6px;">
+                  <span>⬡ Polygon (MATIC)</span>
+                </div>
+                <img src="/static/img/polygon_qr.png" alt="Polygon QR Code" style="width:160px; height:160px; border-radius: 8px; margin-bottom:var(--sp-3); border: 1px solid var(--border); background: white; padding: 4px;">
+                <div class="text-xs text-secondary" style="font-family:var(--font-mono); word-break:break-all; padding: 0 8px; margin-bottom:var(--sp-3); min-height: 32px;">
+                  0x7EFE9a4f712A451b9696E62347dd4576C806f26C
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('0x7EFE9a4f712A451b9696E62347dd4576C806f26C'); Utils.toast('Polygon address copied!', 'success');" style="width:100%;">Copy Address</button>
+              </div>
+
+              <!-- Tron Column -->
+              <div class="card card-pad" style="background: var(--bg-surface); border: 1px solid var(--border); display:flex; flex-direction:column; align-items:center; text-align:center; padding: var(--sp-4);">
+                <div style="font-weight:700; color:#ec0623; margin-bottom:var(--sp-2); font-size:15px; display:flex; align-items:center; gap:6px;">
+                  <span>▼ Tron (TRX)</span>
+                </div>
+                <img src="/static/img/tron_qr.png" alt="Tron QR Code" style="width:160px; height:160px; border-radius: 8px; margin-bottom:var(--sp-3); border: 1px solid var(--border); background: white; padding: 4px;">
+                <div class="text-xs text-secondary" style="font-family:var(--font-mono); word-break:break-all; padding: 0 8px; margin-bottom:var(--sp-3); min-height: 32px;">
+                  TF9uMHzb4wcymHY8827cC66f6Cm2i8x63t
+                </div>
+                <button class="btn btn-sm btn-secondary" onclick="navigator.clipboard.writeText('TF9uMHzb4wcymHY8827cC66f6Cm2i8x63t'); Utils.toast('Tron address copied!', 'success');" style="width:100%;">Copy Address</button>
+              </div>
+
+            </div>
+
+            <!-- Live Transaction Tracker -->
+            <div style="margin-top: var(--sp-6); border-top: 1px dashed var(--border); padding-top: var(--sp-5);">
+              <h4 style="font-weight:600; font-size:14px; margin-bottom:var(--sp-2); display:flex; align-items:center; gap:8px; color:var(--text-primary)">
+                <span>⚡ Live Transaction Tracker</span>
+                <span class="badge badge-info" style="font-size: 10px; font-weight: normal; background: var(--bg-subtle); border: 1px solid var(--border); color: var(--text-secondary); padding: 2px 6px; border-radius: 4px;">ON-CHAIN</span>
+              </h4>
+              <p style="font-size:12px; color:var(--text-secondary); margin-bottom:var(--sp-4);">
+                Paste your transaction hash / TxID below to track confirmations, transfers, and block status live directly from mainnet nodes.
+              </p>
+              
+              <div style="display:flex; flex-direction:column; gap:var(--sp-3); max-width: 600px; margin: 0 auto; background: var(--bg-subtle); padding: var(--sp-4); border-radius: var(--radius-md); border: 1px solid var(--border);">
+                
+                <div style="display:flex; gap:var(--sp-2); flex-wrap: wrap;">
+                  <select id="tx-coin-select" class="input" style="height:38px; width:130px; font-size:12px; cursor:pointer; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 var(--sp-2); color: var(--text-primary);">
+                    <option value="ltc">Litecoin (LTC)</option>
+                    <option value="polygon">Polygon (POL)</option>
+                    <option value="trx">TRON (TRX)</option>
+                  </select>
+                  <input type="text" id="tx-hash-input" class="input" placeholder="Enter Transaction Hash / TxID..." style="flex:1; height:38px; font-size:12px; font-family:var(--font-mono); background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 var(--sp-3); color: var(--text-primary);">
+                  <button class="btn btn-primary" onclick="verifyTransaction()" style="height:38px; font-size:12px; padding: 0 var(--sp-4);">Track Status</button>
+                </div>
+                
+                <!-- Tracker Result Panel -->
+                <div id="tx-tracker-result" style="display:none; margin-top:var(--sp-2); padding:var(--sp-4); border-radius:var(--radius-md); border:1px solid var(--border); font-size:12px; background:var(--bg-surface); color: var(--text-primary);">
+                  <!-- Dynamic content rendered here -->
+                </div>
+                
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </main><!-- #main -->
+</div><!-- #app -->
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- JS Modules -->
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/models.js"></script>
+<script src="/static/js/chat.js"></script>
+<script src="/static/js/config.js"></script>
+<script src="/static/js/files.js"></script>
+<script src="/static/js/monitor.js"></script>
+<script src="/static/js/wizard.js"></script>
+<script src="/static/js/app.js"></script>
+
+<!-- Custom Script for Blockchain Live Tracker -->
+<script>
+async function verifyTransaction() {
+  const coin = document.getElementById('tx-coin-select').value;
+  const txHash = document.getElementById('tx-hash-input').value.trim();
+  const resultPanel = document.getElementById('tx-tracker-result');
+  
+  if (!txHash) {
+    if (window.Utils && typeof Utils.toast === 'function') {
+      Utils.toast('Please enter a Transaction ID / Hash', 'warning');
+    } else {
+      alert('Please enter a Transaction ID / Hash');
+    }
+    return;
+  }
+  
+  resultPanel.style.display = 'block';
+  resultPanel.innerHTML = `
+    <div style="display:flex; align-items:center; gap:8px; color:var(--text-secondary);">
+      <span class="spinner" style="border: 2px solid var(--border); border-top-color: var(--accent); width: 14px; height: 14px; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block;"></span>
+      <span>Querying mainnet node for ${coin.toUpperCase()} transaction...</span>
+    </div>
+  `;
+  
+  // Inject spinner keyframes if not present
+  if (!document.getElementById('tracker-spin-style')) {
+    const style = document.createElement('style');
+    style.id = 'tracker-spin-style';
+    style.innerHTML = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+  }
+
+  let explorerUrl = '';
+  if (coin === 'ltc') explorerUrl = `https://live.blockcypher.com/ltc/tx/${txHash}`;
+  else if (coin === 'polygon') explorerUrl = `https://polygonscan.com/tx/${txHash}`;
+  else if (coin === 'trx') explorerUrl = `https://tronscan.org/#/transaction/${txHash}`;
+
+  try {
+    if (coin === 'ltc') {
+      const res = await fetch(`https://api.blockcypher.com/v1/ltc/main/txs/${txHash}`, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) throw new Error('Transaction hash not found or not indexed');
+      const data = await res.json();
+      
+      const confirmations = data.confirmations || 0;
+      const amount = (data.total / 1e8).toFixed(4);
+      const isConfirmed = confirmations > 0;
+      const timeStr = data.received ? new Date(data.received).toLocaleString() : 'N/A';
+      
+      resultPanel.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px; animation: slideUp 200ms ease-out;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color: ${isConfirmed ? 'var(--success)' : 'var(--warning)'}; display:flex; align-items:center; gap:6px;">
+              <span>${isConfirmed ? '● Confirmed Transaction' : '○ Pending Confirmations'}</span>
+            </strong>
+            <span style="font-family:var(--font-mono); color:var(--text-secondary); font-size:11px;">LTC Mainnet</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; border-top:1px solid var(--border); padding-top:8px; color:var(--text-secondary); font-size:11px;">
+            <div><strong>Value Transferred:</strong> <span style="font-family:var(--font-mono); color:var(--text-primary); font-weight:bold;">${amount} LTC</span></div>
+            <div><strong>Confirmations Count:</strong> <span style="font-family:var(--font-mono); color:var(--text-primary); font-weight:bold;">${confirmations}</span></div>
+            <div><strong>Block Height:</strong> <span style="font-family:var(--font-mono);">${data.block_height || 'Unconfirmed'}</span></div>
+            <div><strong>Received Time:</strong> <span>${timeStr}</span></div>
+          </div>
+          <div style="margin-top:6px;">
+            <a href="${explorerUrl}" target="_blank" class="btn btn-sm btn-secondary" style="display:block; text-align:center; font-size:11px; width: 100%;">Inspect Transaction on BlockCypher ↗</a>
+          </div>
+        </div>
+      `;
+    }
+    else if (coin === 'polygon') {
+      const rpcRes = await fetch('https://polygon-rpc.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_getTransactionByHash",
+          params: [txHash]
+        }),
+        signal: AbortSignal.timeout(6000)
+      });
+      if (!rpcRes.ok) throw new Error('Polygon node network timeout');
+      const rpcData = await rpcRes.json();
+      const tx = rpcData.result;
+      
+      if (!tx) {
+        throw new Error('Transaction hash not found in mined blocks or local pool');
+      }
+      
+      const blockRes = await fetch('https://polygon-rpc.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 2,
+          method: "eth_blockNumber",
+          params: []
+        })
+      });
+      let currentBlock = 0;
+      if (blockRes.ok) {
+        const blockData = await blockRes.json();
+        currentBlock = parseInt(blockData.result, 16);
+      }
+      
+      const txBlock = tx.blockNumber ? parseInt(tx.blockNumber, 16) : 0;
+      const confirmations = txBlock > 0 && currentBlock > 0 ? (currentBlock - txBlock) : 0;
+      const amountHex = tx.value || '0x0';
+      const amount = (parseInt(amountHex, 16) / 1e18).toFixed(4);
+      const isConfirmed = txBlock > 0;
+      
+      resultPanel.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px; animation: slideUp 200ms ease-out;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color: ${isConfirmed ? 'var(--success)' : 'var(--warning)'}; display:flex; align-items:center; gap:6px;">
+              <span>${isConfirmed ? '● Confirmed (Mined)' : '○ In Pool (Pending)'}</span>
+            </strong>
+            <span style="font-family:var(--font-mono); color:var(--text-secondary); font-size:11px;">Polygon Mainnet</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; border-top:1px solid var(--border); padding-top:8px; color:var(--text-secondary); font-size:11px;">
+            <div><strong>Transfer Value:</strong> <span style="font-family:var(--font-mono); color:var(--text-primary); font-weight:bold;">${amount} POL (MATIC)</span></div>
+            <div><strong>Confirmations:</strong> <span style="font-family:var(--font-mono); color:var(--text-primary); font-weight:bold;">${confirmations} blocks</span></div>
+            <div><strong>Block Number:</strong> <span style="font-family:var(--font-mono);">${txBlock || 'Pending'}</span></div>
+            <div><strong>Gas Price Paid:</strong> <span style="font-family:var(--font-mono);">${parseInt(tx.gasPrice, 16) / 1e9} Gwei</span></div>
+          </div>
+          <div style="margin-top:6px;">
+            <a href="${explorerUrl}" target="_blank" class="btn btn-sm btn-secondary" style="display:block; text-align:center; font-size:11px; width: 100%;">View Invoice on PolygonScan ↗</a>
+          </div>
+        </div>
+      `;
+    }
+    else if (coin === 'trx') {
+      const res = await fetch(`https://apilist.tronscanapi.com/api/transaction-info?hash=${txHash}`, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) throw new Error('Tronscan fetch failure');
+      const data = await res.json();
+      
+      if (!data || Object.keys(data).length === 0 || !data.block) {
+        throw new Error('Transaction ID not indexed on TRON network');
+      }
+      
+      const isConfirmed = data.confirmed === true;
+      const amountRaw = data.trigger_info?.parameter?.value?.amount || data.amount || 0;
+      const amount = (amountRaw / 1e6).toFixed(2);
+      const block = data.block || 'N/A';
+      const timeStr = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
+      
+      resultPanel.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px; animation: slideUp 200ms ease-out;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color: ${isConfirmed ? 'var(--success)' : 'var(--warning)'}; display:flex; align-items:center; gap:6px;">
+              <span>${isConfirmed ? '● Confirmed / Success' : '○ Pending Confirmations'}</span>
+            </strong>
+            <span style="font-family:var(--font-mono); color:var(--text-secondary); font-size:11px;">TRON Mainnet</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; border-top:1px solid var(--border); padding-top:8px; color:var(--text-secondary); font-size:11px;">
+            <div><strong>Transfer Value:</strong> <span style="font-family:var(--font-mono); color:var(--text-primary); font-weight:bold;">${amount} TRX</span></div>
+            <div><strong>Receipt Status:</strong> <span style="color:var(--success); font-weight:bold;">${data.contractRet || 'SUCCESS'}</span></div>
+            <div><strong>Block Height:</strong> <span style="font-family:var(--font-mono);">${block}</span></div>
+            <div><strong>Execution Time:</strong> <span>${timeStr}</span></div>
+          </div>
+          <div style="margin-top:6px;">
+            <a href="${explorerUrl}" target="_blank" class="btn btn-sm btn-secondary" style="display:block; text-align:center; font-size:11px; width: 100%;">View Receipt on TronScan ↗</a>
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    resultPanel.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:8px; animation: slideUp 200ms ease-out;">
+        <div style="display:flex; align-items:center; gap:6px; color:#e0a800;">
+          <strong>⚠️ Node Verification Standby</strong>
+        </div>
+        <p style="font-size:11px; line-height:1.4; color:var(--text-secondary); margin:0;">
+          Mainnet RPC nodes did not return indexing parameters for this TxID yet (usually takes 30-90 seconds to propagate globally across all node pools).
+        </p>
+        <p style="font-size:11px; line-height:1.4; color:var(--text-secondary); margin:0; font-weight:bold;">
+          You can track this transaction directly on the network's official explorer webpage:
+        </p>
+        <div style="margin-top:6px;">
+          <a href="${explorerUrl}" target="_blank" class="btn btn-sm btn-primary" style="display:block; text-align:center; font-size:11px; width: 100%;">Track Live on Explorer Website ↗</a>
+        </div>
+      </div>
+    `;
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+# MULTRIIX X — Git Ignore Configuration
+
+# Local Secrets & Security Manuals
+README_PRIVATE.md
+.env
+
+# Dynamic Port Cache
+.multriix_port
+
+# Python compilation cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Data / Settings / Sessions Cache
+neuraldesk/data/
+multriix_x/neuraldesk/data/
+
+# OS/System generated files
+.DS_Store
+Thumbs.db
+
+# Heavy Binaries, Installers, & Archives
+*.exe
+*.msi
+*.zip
+*.7z
+*.rar
+*.tar.gz
+*.iso

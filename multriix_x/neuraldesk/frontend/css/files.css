@@ -1,0 +1,169 @@
+/* NeuralDesk — File Manager Styles */
+
+#view-files {
+  overflow: hidden;
+  flex-direction: row !important;
+}
+
+/* Left: browser pane */
+.files-browser {
+  width: 35%;
+  min-width: 240px;
+  max-width: 420px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+/* Breadcrumb */
+.file-breadcrumb {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: var(--text-xs);
+  background: var(--bg-subtle);
+  flex-shrink: 0;
+}
+.breadcrumb-part {
+  color: var(--text-link);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.breadcrumb-part:hover { background: var(--accent-light); }
+.breadcrumb-sep { color: var(--text-tertiary); }
+
+/* Toolbar */
+.files-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Quick access */
+.quick-access {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+.qa-title { font-size: var(--text-xs); font-weight: 600; color: var(--text-secondary); margin-bottom: var(--sp-2); text-transform: uppercase; letter-spacing: 0.3px; }
+.qa-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px var(--sp-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  transition: background var(--duration);
+}
+.qa-item:hover { background: var(--bg-subtle); color: var(--text-primary); }
+
+/* File list */
+.file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-2) 0;
+}
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 8px var(--sp-4);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background var(--duration);
+  user-select: none;
+}
+.file-item:hover { background: var(--bg-subtle); }
+.file-item.active { background: var(--accent-light); color: var(--accent); }
+.file-item .fi-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.file-item .fi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-item .fi-size { font-size: var(--text-xs); color: var(--text-tertiary); flex-shrink: 0; font-family: var(--font-mono); }
+.file-item.is-modelfile .fi-name { color: var(--accent); font-weight: 500; }
+
+/* Right: Editor pane */
+.files-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.editor-filepath {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.editor-dirty-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  flex-shrink: 0;
+  display: none;
+}
+.editor-dirty .editor-dirty-dot { display: block; }
+
+.editor-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+#file-editor-textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  padding: var(--sp-5);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  tab-size: 4;
+}
+
+.editor-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  color: var(--text-secondary);
+}
+.editor-empty .empty-icon { font-size: 48px; opacity: 0.3; }
+
+/* Resizer */
+.files-resizer {
+  width: 4px;
+  background: var(--border);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background var(--duration);
+}
+.files-resizer:hover { background: var(--accent); }
