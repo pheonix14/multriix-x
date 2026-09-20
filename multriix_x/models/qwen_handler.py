@@ -23,8 +23,9 @@ class QwenHandler:
     Auto-detects GPU/CPU, supports streaming, tracks performance.
     """
 
-    def __init__(self, model_id: str = None, use_small: bool = False):
+    def __init__(self, model_id: str = None, use_small: bool = False, revision: str = None):
         self.model_id = model_id or (QWEN_SMALL_MODEL_ID if use_small else QWEN_MODEL_ID)
+        self.revision = revision or os.environ.get("QWEN_REVISION")
         self.model = None
         self.tokenizer = None
         self.device = None
@@ -60,9 +61,10 @@ class QwenHandler:
                     self.model_id,
                     cache_dir=CACHE_DIR,
                     token=HF_TOKEN or None,
+                    revision=self.revision,
                 )
                 self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_id, **kwargs
+                    self.model_id, revision=self.revision, **kwargs
                 )
                 self.loaded = True
                 print(f"[QWEN] Model loaded successfully on {self.device}.")

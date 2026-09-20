@@ -8,7 +8,8 @@ export default function SystemStats() {
     });
 
     useEffect(() => {
-        const ws = new WebSocket(`ws://${window.location.host}/ws/stats`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}/ws/stats`);
         ws.onmessage = (event) => {
             setStats(JSON.parse(event.data));
         };

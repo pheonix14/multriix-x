@@ -73,7 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentAssistantMessage = null;
 
     function connectWS() {
-        ws = new WebSocket(`ws://${window.location.host}/ws/chat`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${window.location.host}/ws/chat`);
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.error) {

@@ -75,7 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // WEBSOCKET
     let isThinking = false;
-    const ws = new WebSocket(`ws://${window.location.host}/ws/brain`);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/brain`);
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
         isThinking = data.thinking;

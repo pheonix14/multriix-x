@@ -21,8 +21,9 @@ class MistralHandler:
     Streaming, performance tracking, hot model-switching.
     """
 
-    def __init__(self, model_id: str = None):
+    def __init__(self, model_id: str = None, revision: str = None):
         self.model_id = model_id or MISTRAL_MODEL_ID
+        self.revision = revision or os.environ.get("MISTRAL_REVISION")
         self.model = None
         self.tokenizer = None
         self.device = None
@@ -47,6 +48,7 @@ class MistralHandler:
                     self.model_id,
                     cache_dir=CACHE_DIR,
                     token=HF_TOKEN or None,
+                    revision=self.revision,
                 )
                 self.model = AutoModelForCausalLM.from_pretrained(
                     self.model_id,
@@ -54,6 +56,7 @@ class MistralHandler:
                     torch_dtype="auto",
                     device_map="auto",
                     token=HF_TOKEN or None,
+                    revision=self.revision,
                 )
                 self.loaded = True
                 print(f"[MISTRAL] Model loaded on {self.device}.")

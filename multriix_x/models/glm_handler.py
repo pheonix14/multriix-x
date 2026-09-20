@@ -21,10 +21,11 @@ class GLMHandler:
     Full GLM-4 handler with bilingual support and optional 8-bit quantization.
     """
 
-    def __init__(self, model_id: str = None, use_8bit: bool = False, bilingual: bool = True):
+    def __init__(self, model_id: str = None, use_8bit: bool = False, bilingual: bool = True, revision: str = None):
         self.model_id = model_id or GLM_SMALL_MODEL_ID
         self.use_8bit = use_8bit
         self.bilingual = bilingual
+        self.revision = revision or os.environ.get("GLM_REVISION")
         self.model = None
         self.tokenizer = None
         self.device = None
@@ -61,8 +62,16 @@ class GLMHandler:
                 else:
                     model_kwargs["torch_dtype"] = "auto"
 
-                self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, **tokenizer_kwargs)
-                self.model = AutoModelForCausalLM.from_pretrained(self.model_id, **model_kwargs)
+                self.tokenizer = AutoTokenizer.from_pretrained(
+                    self.model_id,
+                    revision=self.revision,
+                    **tokenizer_kwargs,
+                )
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.model_id,
+                    revision=self.revision,
+                    **model_kwargs,
+                )
                 self.loaded = True
                 print(f"[GLM] Model loaded on {self.device}.")
             except Exception as e:

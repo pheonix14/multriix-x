@@ -5,7 +5,8 @@
 
 const API = (() => {
   const BASE = window.location.origin;
-  const WS_BASE = `ws://${window.location.host}`;
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const WS_BASE = `${wsProtocol}//${window.location.host}`;
 
   async function get(path) {
     const r = await fetch(BASE + path);
