@@ -39,7 +39,8 @@ export default function LiveBrain() {
         const particles = new THREE.Points(partGeo, partMat);
         particleGroup.add(particles);
 
-        let ws = new WebSocket(`ws://${window.location.host}/ws/brain`);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let ws = new WebSocket(`${protocol}//${window.location.host}/ws/brain`);
         let isThinking = false;
         let rotAngle = 0;
 

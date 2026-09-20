@@ -1,8 +1,10 @@
+import os
 import threading
 
 class StandaloneHandler:
-    def __init__(self, model_name="Qwen/Qwen2.5-0.5B-Instruct"):
+    def __init__(self, model_name="Qwen/Qwen2.5-0.5B-Instruct", revision=None):
         self.model_name = model_name
+        self.revision = revision or os.environ.get("STANDALONE_MODEL_REVISION")
         self.model = None
         self.tokenizer = None
         self.loading = False
@@ -18,9 +20,13 @@ class StandaloneHandler:
             
             self.loading = True
             print(f"[INFO] Loading standalone model {self.model_name}...")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name,
+                revision=self.revision,
+            )
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
+                revision=self.revision,
                 torch_dtype="auto",
                 device_map="auto"
             )
