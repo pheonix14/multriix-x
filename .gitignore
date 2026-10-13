@@ -32,3 +32,6 @@ Thumbs.db
 *.rar
 *.tar.gz
 *.iso
+bin/
+multriix_x/saves/*.mxsave
+.multriix_saves/

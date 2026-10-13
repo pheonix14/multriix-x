@@ -59,7 +59,19 @@ Built and maintained by **ZeroX** (aka **pheonix14** on GitHub).
 * **Polygon (POL/MATIC):** Initiates JSON-RPC RPC queries to calculate receipts status, gas costs, and mined confirmation offsets.
 * **TRON (TRX):** Leverages public Tronscan REST APIs to track success status, transfers, and timestamps.
 
-### 5. 📊 Real-Time Resource Monitor & Process Controller
+### 5. ⚡ Native C++ CLI Launcher (`mx`)
+* **Instant Terminal Execution:** Type `mx` from ANY terminal window on your machine to immediately boot the sovereign AI developer workspace.
+* **C++17 Engine:** High-performance, zero-overhead compiled binary with sub-millisecond launch latency.
+* **CLI Control Suite:** Full CLI telemetry, testing, status inspection, and savegame slot management directly from your shell.
+* **Easy Build & Install:** Simple `make && make install` to install globally to `$PATH`.
+
+### 6. 💾 Portable "Savegame" Memory Cartridge System (`.mxsave`)
+* **Travel-Ready AI Brains:** Export your agent's knowledge, short-term history, system instructions, and vector facts into standalone `.mxsave` files that you can travel with on flash drives or across multiple machines.
+* **Integrity Hardening:** Automatic SHA-256 cryptographic verification prevents corrupted, incomplete, or tampered memory loads.
+* **Seamless Merging:** Supports both `replace` (clean restore) and `merge` (cross-device knowledge fusion without duplicate facts).
+* **QuickSave & QuickLoad:** One-command instant checkpoints (`mx qs` / `mx ql`) to preserve model context before complex experimental workflows.
+
+### 7. 📊 Real-Time Resource Monitor & Process Controller
 * **Resource Gauges:** Visualized active tracking of your CPU, RAM, GPU, and Disk usages.
 * **Process Termination Panel:** Lists currently running processes on your host with full filter search and single-click process termination (`Kill Process`) safety actions.
 

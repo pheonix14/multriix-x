@@ -131,6 +131,68 @@ class MemoryManager:
         with self._lock:
             return {"short_term": list(self.short_term), "long_term": list(self.long_term)}
 
+    def get_savegame_manager(self):
+        if not hasattr(self, "_savegame_mgr") or self._savegame_mgr is None:
+            from core.savegame_manager import SavegameManager
+            self._savegame_mgr = SavegameManager()
+        return self._savegame_mgr
+
+    def save_slot(
+        self,
+        slot_name: str = "quicksave",
+        description: str = "",
+        tags: Optional[List[str]] = None,
+        author: str = "pheonix14",
+        target_path: Optional[str] = None
+    ):
+        """Save current memory snapshot to a named slot or file path."""
+        with self._lock:
+            state = self.export()
+            sm = self.get_savegame_manager()
+            return sm.create_savegame(
+                memory_state=state,
+                slot_name=slot_name,
+                description=description,
+                tags=tags,
+                author=author,
+                target_path=target_path
+            )
+
+    def load_slot(self, slot_name_or_file: str, merge: bool = False) -> dict:
+        """Load a savegame slot or file. If merge=True, combines without duplicates."""
+        with self._lock:
+            sm = self.get_savegame_manager()
+            current = self.export() if merge else None
+            restored = sm.load_savegame(slot_name_or_file, merge=merge, current_state=current)
+            self.short_term = restored.get("short_term", [])
+            self.long_term = restored.get("long_term", [])
+            self._save_long_term()
+            return restored
+
+    def quick_save(self, description: str = "QuickSave"):
+        """Convenient quicksave to 'quicksave' slot."""
+        return self.save_slot("quicksave", description=description)
+
+    def quick_load(self) -> dict:
+        """Convenient quickload from 'quicksave' slot."""
+        return self.load_slot("quicksave", merge=False)
+
+    def list_saves(self) -> List[dict]:
+        """List all available savegame cartridges."""
+        return self.get_savegame_manager().list_savegames()
+
+    def export_cartridge(self, slot_name: str, dest_path: str) -> str:
+        """Export savegame slot to portable file for travel."""
+        return self.get_savegame_manager().export_savegame(slot_name, dest_path)
+
+    def import_cartridge(self, source_path: str, target_slot: Optional[str] = None, merge: bool = False) -> dict:
+        """Import external portable cartridge file."""
+        sm = self.get_savegame_manager()
+        dest_path, info = sm.import_savegame(source_path, target_slot)
+        if merge:
+            self.load_slot(dest_path, merge=True)
+        return info
+
 
 _memory_manager: Optional[MemoryManager] = None
 
