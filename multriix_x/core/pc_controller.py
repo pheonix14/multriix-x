@@ -1,11 +1,15 @@
 import subprocess
 import os
-import psutil
 import platform
 import shutil
 import time
 import base64
 from datetime import datetime
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 try:
     import GPUtil
@@ -37,6 +41,8 @@ class PCController:
 
     def list_dir(self, path):
         try:
+            if not os.path.exists(path):
+                return {"error": f"Path does not exist: {path}"}
             items = os.listdir(path)
             details = []
             for item in items:
@@ -70,30 +76,42 @@ class PCController:
 
     def get_system_stats(self):
         stats = {
-            "cpu_percent": psutil.cpu_percent(interval=None),
-            "cpu_cores": psutil.cpu_count(),
+            "cpu_percent": psutil.cpu_percent(interval=None) if psutil else 0.0,
+            "cpu_cores": psutil.cpu_count() if psutil else (os.cpu_count() or 1),
             "ram": {
-                "total": psutil.virtual_memory().total,
-                "available": psutil.virtual_memory().available,
-                "used": psutil.virtual_memory().used,
-                "percent": psutil.virtual_memory().percent
+                "total": psutil.virtual_memory().total if psutil else 0,
+                "available": psutil.virtual_memory().available if psutil else 0,
+                "used": psutil.virtual_memory().used if psutil else 0,
+                "percent": psutil.virtual_memory().percent if psutil else 0.0
             },
             "disk": {},
             "gpu": []
         }
         
         # Disk stats
-        for part in psutil.disk_partitions():
+        if psutil:
+            for part in psutil.disk_partitions():
+                try:
+                    usage = psutil.disk_usage(part.mountpoint)
+                    stats["disk"][part.mountpoint] = {
+                        "total": usage.total,
+                        "used": usage.used,
+                        "free": usage.free,
+                        "percent": usage.percent
+                    }
+                except Exception:
+                    continue
+        else:
             try:
-                usage = psutil.disk_usage(part.mountpoint)
-                stats["disk"][part.mountpoint] = {
+                usage = shutil.disk_usage(os.path.abspath("."))
+                stats["disk"]["current"] = {
                     "total": usage.total,
                     "used": usage.used,
                     "free": usage.free,
-                    "percent": usage.percent
+                    "percent": round((usage.used / usage.total) * 100, 2) if usage.total else 0.0
                 }
-            except:
-                continue
+            except Exception:
+                pass
 
         # GPU stats
         if GPUtil:
@@ -108,12 +126,14 @@ class PCController:
                         "memory_used": gpu.memoryUsed,
                         "temperature": gpu.temperature
                     })
-            except:
+            except Exception:
                 pass
                 
         return stats
 
     def list_processes(self):
+        if not psutil:
+            return []
         processes = []
         for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
             try:
@@ -123,6 +143,8 @@ class PCController:
         return sorted(processes, key=lambda x: x.get('cpu_percent', 0), reverse=True)[:20]
 
     def kill_process(self, pid):
+        if not psutil:
+            return {"error": "psutil is not installed"}
         try:
             p = psutil.Process(pid)
             p.terminate()

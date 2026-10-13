@@ -2,7 +2,11 @@ import time
 import subprocess
 import sys
 import os
-import httpx
+try:
+    import httpx
+except ImportError:
+    httpx = None
+import urllib.request
 import threading
 
 class Watchdog:
@@ -44,9 +48,15 @@ class Watchdog:
 
             # Check health via API
             try:
-                resp = httpx.get(f"http://localhost:{self.port}/health", timeout=2)
-                if resp.status_code != 200:
-                    print(f"[WATCHDOG] Health check failed ({resp.status_code}). Restarting...")
+                if httpx:
+                    resp = httpx.get(f"http://localhost:{self.port}/health", timeout=2)
+                    is_ok = (resp.status_code == 200)
+                else:
+                    req = urllib.request.Request(f"http://localhost:{self.port}/health")
+                    with urllib.request.urlopen(req, timeout=2) as response:
+                        is_ok = (response.status == 200)
+                if not is_ok:
+                    print(f"[WATCHDOG] Health check failed. Restarting...")
                     self._start_process()
             except Exception as e:
                 print(f"[WATCHDOG] Server unreachable: {e}. Restarting...")

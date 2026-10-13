@@ -1,14 +1,16 @@
 import socket
 import os
+from typing import Optional
 
 class PortManager:
-    def __init__(self, start_port=7860, max_port=7900):
+    def __init__(self, start_port=7860, max_port=7900, port_file: Optional[str] = None):
         self.start_port = start_port
         self.max_port = max_port
-        self.port_file = ".multriix_port"
+        self.port_file = port_file or ".multriix_port"
 
     def is_port_in_use(self, port):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.5)
             return s.connect_ex(('localhost', port)) == 0
 
     def find_free_port(self):
@@ -26,6 +28,11 @@ class PortManager:
 
     def get_saved_port(self):
         if os.path.exists(self.port_file):
-            with open(self.port_file, "r") as f:
-                return int(f.read().strip())
+            try:
+                with open(self.port_file, "r") as f:
+                    content = f.read().strip()
+                    if content.isdigit():
+                        return int(content)
+            except Exception:
+                pass
         return self.start_port

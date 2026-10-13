@@ -28,4 +28,4 @@ jobs:
 
     - name: 🧪 Run automated diagnostics and tests
       run: |
-        python -m unittest discover -s multriix_x/tests -p "test_*.py" || echo "Diagnostic tests finished."
+        python multriix_x/tests/run_all_tests.py
